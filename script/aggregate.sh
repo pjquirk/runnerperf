@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
 
-scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-
+sourceDir=$1
+repo=$2
 repo="pytorch"
 attempt="1"
+destDir=$sourceDir
 
-sourceDir="$scriptDir/../analysis/summarized/$repo/$attempt"
-destDir="$scriptDir/../analysis/summarized/$repo/$attempt"
-#mkdir -p $destDir
 csvFile="$destDir/summary.csv"
 
 # Recreate the summary
@@ -60,11 +58,11 @@ do
     #   22 aqu-sz,
     #   23 %util
 
-    datamash --header-in --sort --field-separator=, sum 4 sum 10
+    #datamash --header-in --sort --field-separator=, sum 4 sum 10
 
     #vals=$(cat $devices | datamash --header-in --sort --field-separator=, mean 2 perc:90 2)
-    diskIO_mean=${vals%,*}
-    diskIO_P95=${vals#*,}
+    diskIO_mean=""
+    diskIO_P95=""
 
     #vals=$(cat $devices | datamash --header-in --sort --field-separator=, mean 2 perc:90 2)
     diskMBs_mean=""

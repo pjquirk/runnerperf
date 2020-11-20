@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
 
-repo="pytorch"
-attempt="1"
+sourceDir=$1
+destDir=$2
 
-scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-sourceDir="$scriptDir/../analysis/rawdata/$repo/$attempt"
-destDir="$scriptDir/../analysis/summarized/$repo/$attempt"
 mkdir -p $destDir
+rm -rf $destDir/*
 
 shopt -s nullglob
 for f in $sourceDir/*-iostat.txt
@@ -28,5 +26,5 @@ do
     t0=$(date -j -f "%a, %d %b %Y %k:%M:%S %z" "${lines[0]}" +%s)
     t1=$(date -j -f "%a, %d %b %Y %k:%M:%S %z" "${lines[1]}" +%s)
     seconds=$((t1-t0))
-    echo $seconds >> "$outputFile"
+    echo $seconds > "$outputFile"
 done
