@@ -4,7 +4,6 @@ set -euo pipefail
 
 sourceDir=$1
 repo=$2
-repo="pytorch"
 attempt="1"
 destDir=$sourceDir
 
