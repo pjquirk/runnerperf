@@ -23,8 +23,8 @@ do
     outputFile="$destDir/${filenameWithoutExt/iostat/timing}.txt"
     IFS=$'\n' read -d '' -r -a lines < "$timing"
 
-    t0=$(date -j -f "%a, %d %b %Y %k:%M:%S %z" "${lines[0]}" +%s)
-    t1=$(date -j -f "%a, %d %b %Y %k:%M:%S %z" "${lines[1]}" +%s)
+    t0=$(date -d "${lines[0]}" +%s)
+    t1=$(date -d "${lines[1]}" +%s)
     seconds=$((t1-t0))
     echo $seconds > "$outputFile"
 done
