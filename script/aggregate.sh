@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 sourceDir=$1
 repo=$2
 repo="pytorch"
