@@ -23,7 +23,10 @@ do
     # Get build timing
     timing=${f/-iostat/-timing}
     outputFile="$destDir/${filenameWithoutExt/iostat/timing}.txt"
-    IFS=$'\n' read -d '' -r -a lines < "$timing"
+    # Mac
+    #IFS=$'\n' read -d '' -r -a lines < "$timing"
+    # Linux
+    mapfile -t lines < "$timing"
 
     t0=$(date -d "${lines[0]}" +%s)
     t1=$(date -d "${lines[1]}" +%s)
