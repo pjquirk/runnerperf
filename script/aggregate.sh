@@ -22,6 +22,7 @@ do
     runner=$(basename -- $cpu)
     runner=${runner%-*}
     timing="$sourceDir/$runner-timing.txt"
+    memory="$sourceDir/$runner-vmstat.txt"
 
     # extract into CSV:
     # Repository,Attempt,Build Time,CPU,CPU 95%,Disk IOPS,Disk IOPS 95%,Disk MB/s,Disk MB/s 95%,Available Memory,Available Memory 95%
@@ -102,8 +103,10 @@ do
     diskMBs_w_mean=$(echo $deviceData | cut -d, -f 5)
     diskMBs_w_P95=$(echo $deviceData | cut -d, -f 9)
 
-    availMem_mean=""
-    availMem_P95=""
+    # Memory
+    memData=$(cat $memory | datamash --header-in --sort --field-separator=, mean "free" perc:95 "free")
+    availMem_mean=$(echo $memData | cut -d, -f 1)
+    availMem_P95=$(echo $memData | cut -d, -f 2)
 
     line="$repo,$attempt,$runner,$buildTime,$cpu_mean,$cpu_P95,$diskIO_r_mean,$diskIO_r_P95,$diskIO_w_mean,$diskIO_w_P95,$diskMBs_r_mean,$diskMBs_r_P95,$diskMBs_w_mean,$diskMBs_w_P95,$availMem_mean,$availMem_P95"
     echo "$line" >> "$csvFile"

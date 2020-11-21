@@ -32,4 +32,10 @@ do
     t1=$(date -d "${lines[1]}" +%s)
     seconds=$((t1-t0))
     echo $seconds > "$outputFile"
+
+    # Dump memory to csv
+    memory=${f/-iostat/-vmstat}
+    outputFile="$destDir/${filenameWithoutExt/iostat/vmstat}.txt"
+    # Skip the header, merge whitespace and convert to commas (for csv)
+    tail --lines=+2 "$memory" | tr -s ' ' ',' > "$outputFile"
 done
