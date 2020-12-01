@@ -36,59 +36,60 @@ do
     # headers:
     #   1 datetime
     #   2 device
-    #   3 Device
-    #   4 r/s
-    #   5 w/s
-    #   6 rMB/s
-    #   7 wMB/s
-    #   8 rrqm/s
-    #   9 wrqm/s
-    #   10 %rrqm
-    #   11 %wrqm
-    #   12 r_await
-    #   13 w_await
-    #   14 aqu-sz
-    #   15 rareq-sz
-    #   16 wareq-sz
-    #   17 svctm
-    #   18 %util
+    #   3 r/s
+    #   4 w/s
+    #   5 rMB/s
+    #   6 wMB/s
+    #   7 rrqm/s
+    #   8 wrqm/s
+    #   9 %rrqm
+    #   10 %wrqm
+    #   11 r_await
+    #   12 w_await
+    #   13 aqu-sz
+    #   14 rareq-sz
+    #   15 wareq-sz
+    #   16 svctm
+    #   17 %util
 
     # headers (alt):
     #   1 datetime,
     #   2 device,
-    #   3 Device,
-    #   4 r/s,
-    #   5 rMB/s,
-    #   6 rrqm/s,
-    #   7 %rrqm,
-    #   8 r_await,
-    #   9 rareq-sz,
-    #   10 w/s,
-    #   11 wMB/s,
-    #   12 wrqm/s,
-    #   13 %wrqm,
-    #   14 w_await,
-    #   15 wareq-sz,
-    #   16 d/s,
-    #   17 dMB/s,
-    #   18 drqm/s,
-    #   19 %drqm,
-    #   20 d_await,
-    #   21 dareq-sz,
-    #   22 aqu-sz,
-    #   23 %util
+    #   3 r/s,
+    #   4 rMB/s,
+    #   5 rrqm/s,
+    #   6 %rrqm,
+    #   7 r_await,
+    #   8 rareq-sz,
+    #   9 w/s,
+    #   10 wMB/s,
+    #   11 wrqm/s,
+    #   12 %wrqm,
+    #   13 w_await,
+    #   14 wareq-sz,
+    #   15 d/s,
+    #   16 dMB/s,
+    #   17 drqm/s,
+    #   18 %drqm,
+    #   29 d_await,
+    #   20 dareq-sz,
+    #   21 aqu-sz,
+    #   22 %util
 
     # Check for the alternate headers
-    columns="4,6,5,7"
+    columns="3,5,4,6"
     if grep -q "dareq" $devices; then
-        columns="4,5,10,11"
+        columns="3,4,9,10"
     fi
 
     # Find the most active device
+    if [[ "$(uname -s)" == "Darwin" ]]; then
+        # Mac
+        deviceData=$(cat $devices | datamash --header-in --sort --field-separator=, mean $columns perc:95 $columns --group=2 | sort -nr -k2 -t, | head -n 1)
+    else
     # Linux
     deviceData=$(cat $devices | datamash --header-in --sort --field-separator=, mean $columns perc:95 $columns --group=2 | sort -nr -k2 -t, | head --lines=1)
-    # Mac
-    # deviceData=$(cat $devices | datamash --header-in --sort --field-separator=, mean $columns perc:95 $columns --group=2 | sort -nr -k2 -t, | head -n 1)
+    fi
 
     # Values is: device, rmean,rmbmean,wmean,wmbmean, rp95,rmbp95,wp95,wmbp95
     #                        2       3     4       5     6      7    8      9
