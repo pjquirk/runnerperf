@@ -13,7 +13,7 @@ csvFile="$destDir/summary.csv"
 if [[ -f "$csvFile" ]]; then
     rm "$csvFile"
 fi
-echo "Repository,Attempt,Runner,Build Time,CPU,CPU 95%,Disk Read IOPS,Disk Read IOPS 95%,Disk Read IOPS Peak,Disk Write IOPS,Disk Write IOPS 95%,Disk Write IOPS Peak,Disk Read MB/s,Disk Read MB/s 95%,Disk Read MB/s Peak,Disk Write MB/s,Disk Write MB/s 95%,Disk Write MB/s Peak,Available Memory,Available Memory 95%" > "$csvFile"
+echo "Repository,Attempt,Runner,Build Time,CPU,CPU 95%,IO Wait,IO Wait 95%,Disk Read IOPS,Disk Read IOPS 95%,Disk Read IOPS Peak,Disk Write IOPS,Disk Write IOPS 95%,Disk Write IOPS Peak,Disk Read MB/s,Disk Read MB/s 95%,Disk Read MB/s Peak,Disk Write MB/s,Disk Write MB/s 95%,Disk Write MB/s Peak,Available Memory,Available Memory 95%" > "$csvFile"
 
 shopt -s nullglob
 for cpu in $sourceDir/*-iostat_cpu.csv
@@ -24,11 +24,22 @@ do
     timing="$sourceDir/$runner-timing.txt"
     memory="$sourceDir/$runner-vmstat.txt"
 
-    # extract into CSV:
+    # headers:
+    #   1 datetime
+    #   2 %user
+    #   3 %nice
+    #   4 %system
+    #   5 %iowait
+    #   6 %steal
+    #   7 %idle
+    cpuData=$(cat $cpu | datamash --header-in --sort --field-separator=, mean 2,5 perc:95 2,5)
 
-    vals=$(cat $cpu | datamash --header-in --sort --field-separator=, mean 2 perc:95 2)
-    cpu_mean=${vals%,*}
-    cpu_P95=${vals#*,}
+    # cpuData is: usermean,iowaitmean, userp95,iowaitp95
+    #                    1          2        3         4
+    cpu_mean=$(echo $cpuData | cut -d, -f 1)
+    cpu_P95=$(echo $cpuData | cut -d, -f 3)
+    iowait_mean=$(echo $cpuData | cut -d, -f 2)
+    iowait_P95=$(echo $cpuData | cut -d, -f 4)
 
     buildTime=$(cat $timing)
 
@@ -90,8 +101,8 @@ do
         deviceData=$(cat $devices | datamash --header-in --sort --field-separator=, mean $columns perc:95 $columns max $columns --group=2 | sort -nr -k2 -t, | head --lines=1)
     fi
 
-    # Values is: device, rmean,rmbmean,wmean,wmbmean, rp95,rmbp95,wp95,wmbp95 rmax,rmbmax,wmax,wmbmax
-    #                        2       3     4       5     6      7    8      9   10     11   12     13
+    # deviceData is: device, rmean,rmbmean,wmean,wmbmean, rp95,rmbp95,wp95,wmbp95 rmax,rmbmax,wmax,wmbmax
+    #                            2       3     4       5     6      7    8      9   10     11   12     13
     diskIO_r_mean=$(echo $deviceData | cut -d, -f 2)
     diskIO_r_P95=$(echo $deviceData | cut -d, -f 6)
     diskIO_r_max=$(echo $deviceData | cut -d, -f 10)
@@ -99,7 +110,6 @@ do
     diskIO_w_P95=$(echo $deviceData | cut -d, -f 8)
     diskIO_w_max=$(echo $deviceData | cut -d, -f 12)
 
-    #vals=$(cat $devices | datamash --header-in --sort --field-separator=, mean 2 perc:95 2)
     diskMBs_r_mean=$(echo $deviceData | cut -d, -f 3)
     diskMBs_r_P95=$(echo $deviceData | cut -d, -f 7)
     diskMBs_r_max=$(echo $deviceData | cut -d, -f 11)
@@ -114,6 +124,6 @@ do
     availMem_mean=0
     availMem_P95=0
 
-    line="$repo,$attempt,$runner,$buildTime,$cpu_mean,$cpu_P95,$diskIO_r_mean,$diskIO_r_P95,$diskIO_r_max,$diskIO_w_mean,$diskIO_w_P95,$diskIO_w_max,$diskMBs_r_mean,$diskMBs_r_P95,$diskMBs_r_max,$diskMBs_w_mean,$diskMBs_w_P95,$diskMBs_w_max,$availMem_mean,$availMem_P95"
+    line="$repo,$attempt,$runner,$buildTime,$cpu_mean,$cpu_P95,$iowait_mean,$iowait_P95,$diskIO_r_mean,$diskIO_r_P95,$diskIO_r_max,$diskIO_w_mean,$diskIO_w_P95,$diskIO_w_max,$diskMBs_r_mean,$diskMBs_r_P95,$diskMBs_r_max,$diskMBs_w_mean,$diskMBs_w_P95,$diskMBs_w_max,$availMem_mean,$availMem_P95"
     echo "$line" >> "$csvFile"
 done
